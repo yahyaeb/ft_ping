@@ -2,7 +2,6 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <stdio.h>
-
 #include <stdint.h>
 
 typedef struct s_icmp_header
@@ -13,6 +12,26 @@ typedef struct s_icmp_header
     uint16_t    id;          // 2 bytes — your process ID
     uint16_t    sequence;    // 2 bytes — increments each packet
 }               t_icmp_header;
+
+
+uint16_t compute_checksum(void *data, int len)
+{
+    uint16_t    *ptr;
+    uint32_t    sum;
+
+    ptr = data;
+    sum = 0;
+    while (len > 1)
+    {
+        sum += *ptr++;
+        len -= 2;
+    }
+    if (len == 1)
+        sum += *(uint8_t *)ptr;
+    sum = (sum >> 16) + (sum & 0xffff);
+    sum += (sum >> 16);
+    return (~sum); //bit flip
+}
 
 int init_sock(void)
 {
