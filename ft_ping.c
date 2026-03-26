@@ -46,10 +46,24 @@ int init_sock(void)
 
 int main(void)
 {
-    int sock = init_sock();
-    if (sock < 0)
-        return (1);
-    printf("socket opened successfully\n");
-    close(sock);
+    t_icmp_header   header;
+
+    // test checksum
+    header.type     = 8;
+    header.code     = 0;
+    header.id       = 1;
+    header.sequence = 1;
+    header.checksum = 0;
+    header.checksum = compute_checksum(&header, sizeof(t_icmp_header));
+    printf("checksum: 0x%x\n", header.checksum);
+
+    uint16_t verify = compute_checksum(&header, sizeof(t_icmp_header));
+    printf("verification raw: 0x%x\n", verify);
+    printf("verification + checksum: 0x%x\n", (uint16_t)(header.checksum + verify));
+    // int sock = init_sock();
+    // if (sock < 0)
+    //     return (1);
+    // printf("socket opened successfully\n");
+    // close(sock);
     return (0);
 }
