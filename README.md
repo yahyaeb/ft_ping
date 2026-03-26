@@ -1,0 +1,1 @@
+gcc -Wall -Wextra -Werror -o ft_ping ft_ping.c
