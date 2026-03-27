@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
+#include <sys/types.h>
 
 typedef struct s_icmp_header
 {
@@ -12,6 +14,19 @@ typedef struct s_icmp_header
     uint16_t    id;          // 2 bytes — your process ID
     uint16_t    sequence;    // 2 bytes — increments each packet
 }               t_icmp_header;
+
+
+typedef struct s_icmp_packet
+{
+    t_icmp_header   header;
+    uint8_t         payload[56];
+}               t_icmp_packet;
+
+struct sockaddr_in {
+    sa_family_t     sin_family;   // address family — always AF_INET for IPv4
+    in_port_t       sin_port;     // port number — 0 for ICMP (no ports)
+    struct in_addr  sin_addr;     // the actual IP address
+};
 
 
 uint16_t compute_checksum(void *data, int len)
@@ -44,26 +59,45 @@ int init_sock(void)
     return sock;
 }
 
-int main(void)
+t_icmp_packet   build_packet(int sequence)
 {
-    t_icmp_header   header;
+    t_icmp_packet   packet;
 
-    // test checksum
-    header.type     = 8;
-    header.code     = 0;
-    header.id       = 1;
-    header.sequence = 1;
-    header.checksum = 0;
-    header.checksum = compute_checksum(&header, sizeof(t_icmp_header));
-    printf("checksum: 0x%x\n", header.checksum);
+    packet.header.type     = 8;
+    packet.header.code     = 0;
+    packet.header.id       = getpid();
+    packet.header.sequence = sequence;
+    packet.header.checksum = 0;
 
-    uint16_t verify = compute_checksum(&header, sizeof(t_icmp_header));
-    printf("verification raw: 0x%x\n", verify);
-    printf("verification + checksum: 0x%x\n", (uint16_t)(header.checksum + verify));
-    // int sock = init_sock();
-    // if (sock < 0)
-    //     return (1);
-    // printf("socket opened successfully\n");
-    // close(sock);
+    // fill payload with filler bytes
+    memset(packet.payload, 0x42, 56);
+
+    // compute checksum over ENTIRE packet (header + payload)
+    packet.header.checksum = compute_checksum(&packet, sizeof(t_icmp_packet));
+
+    return packet;
+}
+
+int main(int argc, char **argv)
+{
+    int sock;
+
+    if (argc != 2)
+    {
+        printf("Usage: ./ft_ping <hostname>\n");
+        return (1);
+    }
+    sock = init_sock();
+    struct sockaddr_in  dest;
+
+    memset(&dest, 0, sizeof(dest));
+    dest.sin_family = AF_INET;
+    dest.sin_port   = 0;
+    if (sock < 0)
+        return (1);
+    t_icmp_packet packet = build_packet(1);
+    printf("packet built, checksum: 0x%x\n", packet.header.checksum);        
+    printf("socket opened successfully\n");
+    close(sock);
     return (0);
 }
