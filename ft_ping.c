@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <string.h>
 #include <sys/types.h>
+#include <netdb.h>
+#include <arpa/inet.h>
 
 typedef struct s_icmp_header
 {
@@ -22,11 +24,6 @@ typedef struct s_icmp_packet
     uint8_t         payload[56];
 }               t_icmp_packet;
 
-struct sockaddr_in {
-    sa_family_t     sin_family;   // address family — always AF_INET for IPv4
-    in_port_t       sin_port;     // port number — 0 for ICMP (no ports)
-    struct in_addr  sin_addr;     // the actual IP address
-};
 
 
 uint16_t compute_checksum(void *data, int len)
@@ -78,25 +75,44 @@ t_icmp_packet   build_packet(int sequence)
     return packet;
 }
 
+
+
+struct sockaddr_in  resolve_host(char *hostname)
+{
+    struct addrinfo     hints;
+    struct addrinfo     *res;
+    struct sockaddr_in  dest;
+
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family   = AF_INET;
+    hints.ai_socktype = SOCK_RAW;
+    if (getaddrinfo(hostname, NULL, &hints, &res) != 0)
+    {
+        printf("ft_ping: unknown host %s\n", hostname);
+        // we'll handle this error better later
+    }
+    dest = *(struct sockaddr_in *)res->ai_addr;
+    freeaddrinfo(res);
+    return dest;
+}
+
 int main(int argc, char **argv)
 {
-    int sock;
+    int                 sock;
+    t_icmp_packet       packet;
+    struct sockaddr_in  dest;
 
     if (argc != 2)
     {
         printf("Usage: ./ft_ping <hostname>\n");
         return (1);
     }
-    sock = init_sock();
-    struct sockaddr_in  dest;
-
-    memset(&dest, 0, sizeof(dest));
-    dest.sin_family = AF_INET;
-    dest.sin_port   = 0;
+    dest   = resolve_host(argv[1]);
+    printf("PING %s (%s)\n", argv[1], inet_ntoa(dest.sin_addr));
+    sock   = init_sock();
     if (sock < 0)
         return (1);
-    t_icmp_packet packet = build_packet(1);
-    printf("packet built, checksum: 0x%x\n", packet.header.checksum);        
+    packet = build_packet(1);
     printf("socket opened successfully\n");
     close(sock);
     return (0);
