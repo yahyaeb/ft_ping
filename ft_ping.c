@@ -42,19 +42,65 @@ uint16_t compute_checksum(void *data, int len)
     return (~sum);
 }
 
+typedef struct s_ip_header
+{
+    uint8_t     ihl_version;  // version (4 bits) + header length (4 bits)
+    uint8_t     tos;
+    uint16_t    tot_len;
+    uint16_t    id;
+    uint16_t    frag_off;
+    uint8_t     ttl;
+    uint8_t     protocol;
+    uint16_t    checksum;
+    uint32_t    saddr;
+    uint32_t    daddr;
+}               t_ip_header;
+
+typedef struct s_recv_buffer
+{
+    t_ip_header     ip;
+    t_icmp_packet   icmp;
+}               t_recv_buffer;
+
+
+void    receive_ping(int sock, int sequence)
+{
+    t_recv_buffer       buffer;
+    struct sockaddr_in  sender;
+    socklen_t           sender_len;
+    ssize_t             bytes;
+
+    sender_len = sizeof(sender);
+    bytes = recvfrom(sock, &buffer, sizeof(buffer), 0,
+                    (struct sockaddr *)&sender, &sender_len);
+    if (bytes < 0)
+    {
+        perror("recvfrom");
+        return ;
+    }
+    if (buffer.icmp.header.type == 0 &&
+        buffer.icmp.header.id == getpid() &&
+        buffer.icmp.header.sequence == sequence)
+        printf("reply from %s: icmp_seq=%d\n",
+               inet_ntoa(sender.sin_addr),
+               buffer.icmp.header.sequence);
+}
+
+
 struct sockaddr_in  resolve_host(char *hostname)
 {
-    struct addrinfo     hints;
+    struct addrinfo     hints; //hints for setting up prefrences...
     struct addrinfo     *res;
     struct sockaddr_in  dest;
 
     memset(&hints, 0, sizeof(hints));
     hints.ai_family   = AF_INET;
     hints.ai_socktype = SOCK_RAW;
-    if (getaddrinfo(hostname, NULL, &hints, &res) != 0)
+    if (getaddrinfo(hostname, NULL, &hints, &res) != 0) // NULL could be 80 or http... but ICMP doesn´t use ports. Also The getaddrinfo make a DNS request that resolves the address
     {
         printf("ft_ping: unknown host %s\n", hostname);
-        // better error handling later
+        perror("getaddrinfo failed");
+        // we'll handle this error better later
     }
     dest = *(struct sockaddr_in *)res->ai_addr;
     freeaddrinfo(res);
@@ -118,6 +164,7 @@ int main(int argc, char **argv)
     packet = build_packet(1);
     printf("PING %s (%s)\n", argv[1], inet_ntoa(dest.sin_addr));
     send_ping(sock, &packet, &dest);
+    receive_ping(sock, 1);
     close(sock);
     return (0);
 }
