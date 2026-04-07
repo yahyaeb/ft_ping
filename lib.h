@@ -9,7 +9,20 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <time.h>
+#include <math.h>
+#include <errno.h>
 
+
+typedef struct s_stats
+{
+    int     packets_sent;
+    int     packets_received;
+    double  rtt_min;
+    double  rtt_max;
+    double  rtt_sum;
+    double  rtt_sum_sq;
+}           t_stats;
 
 typedef struct s_icmp_header
 {

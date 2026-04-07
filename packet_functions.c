@@ -31,19 +31,18 @@ int    receive_ping(int sock, int sequence)
                     (struct sockaddr *)&sender, &sender_len);
     if (bytes < 0)
     {
+        if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)
+            return (-1);
         perror("recvfrom");
-        return (0);
+        return (-1);
     }
     if (buffer.icmp.header.type == 0 &&
         buffer.icmp.header.id == getpid() &&
         buffer.icmp.header.sequence == sequence)
     {
-        printf("reply from %s: icmp_seq=%d\n",
-               inet_ntoa(sender.sin_addr),
-               buffer.icmp.header.sequence);
-        return (1);
+        return (buffer.ip.ttl);
     }
-    return (0);
+    return (-1);
 }
 
 t_icmp_packet   build_packet(int sequence)
@@ -71,5 +70,5 @@ void    send_ping(int sock, t_icmp_packet *packet, struct sockaddr_in *dest)
         perror("sendto");
         return ;
     }
-    printf("packet sent successfully\n");
+    // printf("packet sent successfully\n");
 }
