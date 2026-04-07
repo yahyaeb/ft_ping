@@ -15,7 +15,8 @@ CC = cc
 SRCS = main.c \
 		host_resolution.c \
 		socket.c \
-		packet_functions.c 
+		packet_functions.c \
+		flag.c
 
 CFLAGS = -Wall -Wextra -Werror
 

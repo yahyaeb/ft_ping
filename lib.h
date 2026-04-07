@@ -66,3 +66,5 @@ uint16_t compute_checksum(void *data, int len);
 int    receive_ping(int sock, int sequence);
 t_icmp_packet   build_packet(int sequence);
 void    send_ping(int sock, t_icmp_packet *packet, struct sockaddr_in *dest);
+void print_options(void);
+void    print_version(void);

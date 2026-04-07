@@ -39,6 +39,19 @@ int main(int argc, char **argv)
         printf("Usage: ./ft_ping <hostname>\n");
         return (1);
     }
+    if (argc == 2 && (strcmp(argv[1], "-?") == 0 || strcmp(argv[1], "-V") == 0))
+    {
+        if(strcmp(argv[1], "-?") == 0)
+        {
+            print_options();
+            return (0);
+        }
+        else
+        {
+            print_version();
+            return(0);
+        }
+    }
     dest   = resolve_host(argv[1]);
     sock   = init_sock();
     if (sock < 0)
