@@ -62,7 +62,7 @@ int main(int argc, char **argv)
     sock   = init_sock();
     if (sock < 0)
         return (1);
-    packet = build_packet(0);
+    // packet = build_packet(0);
     // printf("PING %s (%s): 56 data bytes\n", hostname, inet_ntoa(dest.sin_addr));
     if (g_verbose)
     printf("PING %s (%s): 56 data bytes, id 0x%04x = %d\n",
