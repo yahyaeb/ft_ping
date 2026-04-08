@@ -34,6 +34,7 @@ int main(int argc, char **argv)
     double              stddev;
     double              rtt;
     int                 ttl;
+    int                 count;
     char                *hostname;
 
     if (argc == 2 && strcmp(argv[1], "-?") == 0)
@@ -53,6 +54,11 @@ int main(int argc, char **argv)
     }
     else if (argc == 2)
         hostname = argv[1];
+    else if (argc == 4 && strcmp(argv[1], "-c") == 0)
+    {
+        count = atoi(argv[2]);
+        hostname = argv[3];
+    }
     else
     {
         printf("Usage: ./ft_ping [-v] <hostname>\n");
@@ -77,6 +83,8 @@ int main(int argc, char **argv)
     signal(SIGINT, handle_sigint);
     while (g_running)
     {
+        if (count > 0 && stats.packets_sent >= count)
+            break;
         packet = build_packet(packet.header.sequence);
         clock_gettime(CLOCK_MONOTONIC, &start);
         send_ping(sock, &packet, &dest);

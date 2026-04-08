@@ -10,3 +10,10 @@ getaddrinfo, translates google.com to an IP address like xxx.xxx.xxx.xxx before 
 8 - we run a loop with 1s interval
 9 - we then print stats.
 
+
+
+Things to do: 
+1 - clean the project 
+2 - add flag
+3 - initilize uninitlized variables
+4 - test valgrind
