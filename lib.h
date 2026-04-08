@@ -14,10 +14,14 @@
 #include <errno.h>
 
 
+extern int g_verbose;
+extern int g_running;
+
 typedef struct s_stats
 {
     int     packets_sent;
     int     packets_received;
+    int     errors;
     double  rtt_min;
     double  rtt_max;
     double  rtt_sum;
