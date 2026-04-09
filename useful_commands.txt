@@ -1,0 +1,9 @@
+# To run as root inside a Docker environment for testing:
+
+alias ft_ping_env='docker run -it --cap-add=NET_RAW -v $(pwd):/ft_ping ubuntu bash -c "apt-get update -y && apt-get install -y gcc make inetutils-ping && exec bash"'
+
+# Once inside the container:
+# cd /ft_ping && make && ./ft_ping google.com
+
+# To test verbose mode with low TTL:
+# ping --ttl=1 -v google.com

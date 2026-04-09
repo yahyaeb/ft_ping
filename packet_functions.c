@@ -1,6 +1,5 @@
 #include "lib.h"
 
-
 uint16_t compute_checksum(void *data, int len)
 {
     uint16_t    *ptr;

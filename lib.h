@@ -12,7 +12,8 @@
 #include <time.h>
 #include <math.h>
 #include <errno.h>
-
+#include <ctype.h>
+#include <limits.h>
 
 extern int g_verbose;
 extern int g_running;
@@ -46,7 +47,7 @@ typedef struct s_icmp_packet
 
 typedef struct s_ip_header
 {
-    uint8_t     ihl_version;  // version (4 bits) + header length (4 bits)
+    uint8_t     ihl_version; 
     uint8_t     tos;
     uint16_t    tot_len;
     uint16_t    id;
@@ -64,11 +65,13 @@ typedef struct s_recv_buffer
     t_icmp_packet   icmp;
 }               t_recv_buffer;
 
-int init_sock(void);
+int                 init_sock(void);
 struct sockaddr_in  resolve_host(char *hostname);
-uint16_t compute_checksum(void *data, int len);
-int    receive_ping(int sock, int sequence);
-t_icmp_packet   build_packet(int sequence);
-void    send_ping(int sock, t_icmp_packet *packet, struct sockaddr_in *dest);
-void print_options(void);
-void    print_version(void);
+uint16_t            compute_checksum(void *data, int len);
+int                 receive_ping(int sock, int sequence);
+t_icmp_packet       build_packet(int sequence);
+void                send_ping(int sock, t_icmp_packet *packet, struct sockaddr_in *dest);
+void                print_options(void);
+void                print_version(void);
+void                print_stats(t_stats *stats, char *hostname);
+char                *parse_args(int argc, char **argv, int *count);
