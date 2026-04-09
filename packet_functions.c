@@ -27,33 +27,35 @@ int    receive_ping(int sock, int sequence)
     ssize_t             bytes;
 
     sender_len = sizeof(sender);
-    bytes = recvfrom(sock, &buffer, sizeof(buffer), 0,
-                    (struct sockaddr *)&sender, &sender_len);
-    if (bytes < 0)
+    while (1)
     {
-        if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)
+        bytes = recvfrom(sock, &buffer, sizeof(buffer), 0,
+                        (struct sockaddr *)&sender, &sender_len);
+        if (bytes < 0)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)
+                return (-1);
+            perror("recvfrom");
             return (-1);
-        perror("recvfrom");
-        return (-1);
+        }
+        if (buffer.icmp.header.type == 8)
+            continue;
+        if (buffer.icmp.header.type == 0 &&
+            buffer.icmp.header.id == (uint16_t)getpid() &&
+            buffer.icmp.header.sequence == (uint16_t)sequence)
+            return (buffer.ip.ttl);
+        if (g_verbose)
+        {
+            if (buffer.icmp.header.type == 11)
+                printf("From %s: icmp_seq=%d Time to live exceeded\n",
+                    inet_ntoa(sender.sin_addr), sequence);
+            else
+                printf("From %s: icmp_seq=%d type=%d code=%d\n",
+                    inet_ntoa(sender.sin_addr), sequence,
+                    buffer.icmp.header.type, buffer.icmp.header.code);
+        }
+        return (-2);
     }
-    if (buffer.icmp.header.type == 0 &&
-        buffer.icmp.header.id == getpid() &&
-        buffer.icmp.header.sequence == sequence)
-        return (buffer.ip.ttl);
-    if (g_verbose)
-    {
-        if (buffer.icmp.header.type == 11)
-            printf("From %s: icmp_seq=%d Time to live exceeded\n",
-                inet_ntoa(sender.sin_addr),
-                sequence);
-        else
-            printf("From %s: icmp_seq=%d type=%d code=%d\n",
-                inet_ntoa(sender.sin_addr),
-                sequence,
-                buffer.icmp.header.type,
-                buffer.icmp.header.code);
-    }
-    return (-2);
 }
 
 t_icmp_packet   build_packet(int sequence)
